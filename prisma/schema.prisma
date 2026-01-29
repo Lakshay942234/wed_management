@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model - handles all roles (guest, admin, superadmin)
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  password  String?  // Only for admin/superadmin
+  role      String   @default("GUEST") // GUEST, ADMIN, SUPERADMIN
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  family   Family? @relation(fields: [familyId], references: [id])
+  familyId String?
+}
+
+// Family model - groups family members together
+model Family {
+  id           String @id @default(cuid())
+  name         String // e.g., "Sharma Family"
+  relationship String // friend, cousin, uncle, etc.
+
+  members User[]
+
+  hotel   Hotel?  @relation(fields: [hotelId], references: [id])
+  hotelId String?
+
+  coordinator   Coordinator? @relation(fields: [coordinatorId], references: [id])
+  coordinatorId String?
+
+  // Travel info
+  arrivalDate     DateTime?
+  arrivalMode     String? // FLIGHT, TRAIN, CAR, OTHER
+  arrivalDetails  String? // Flight/train number, timing
+
+  departureDate    DateTime?
+  departureMode    String?
+  departureDetails String?
+
+  // Special requirements
+  foodBeforeSunset Boolean @default(false)
+  foodRestrictions String?
+  roomRequirements String?
+  transportNeeds   String?
+  specialNotes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Hotel model
+model Hotel {
+  id       String   @id @default(cuid())
+  name     String
+  address  String
+  phone    String
+  notes    String?
+  families Family[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Coordinator model
+model Coordinator {
+  id       String @id @default(cuid())
+  name     String
+  phone    String
+  area     String // Description of responsibility
+  type     String // AIRPORT or HOTEL
+
+  families Family[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Event model - wedding schedule
+model Event {
+  id        String   @id @default(cuid())
+  name      String
+  date      DateTime
+  startTime String
+  endTime   String?
+  venue     String
+  notes     String?
+  order     Int      @default(0) // Display order
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
